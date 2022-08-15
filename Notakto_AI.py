@@ -1,401 +1,281 @@
+BoardA=[0,1,2,3,4,5,6,7,8]
+BoardB=[0,1,2,3,4,5,6,7,8]
+BoardC=[0,1,2,3,4,5,6,7,8]
+Numbers=['0','1','2','3','4','5','6','7','8']
+Alpha=['A','B','C']
+MBoard = [BoardA, BoardB, BoardC]
 
-@rahulaga2001 
 
-# notakto/solveTicTacToe.py /
+dead=0 # Tells you how many boards are dead
+FixC=0# Comes into play when alpha=[A,C] so that C takes the index of 1.
+move=0 #Move starts with 0, basically move of every player is location+position
+firstmove=0 # first move of AI determined by it
+location=0
+position=0
+value=65
+count=0 
+trip=True
+mylocation=0
 
 
-import random
-import sys
+def game():
+  board()
+  while dead<3:#Main game play. Game continues as long as oneboard is alive
+    index()
+    player()
 
-class Game:
-    def __init__(self):
-        # initial boards
-        self.boards = {"A":range(9), "B":range(9), "C":range(9)}
-        self.dead_patterns = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6],
-                              [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
-        self.simpleForm = '''
-                    %s
-                    %s %s %s
-                    %s %s %s
-                    %s %s %s
-                    '''
-        self.doubleForm = '''
-                    %s       %s
-                    %s %s %s     %s %s %s
-                    %s %s %s     %s %s %s
-                    %s %s %s     %s %s %s
-                    '''
-        self.tripleForm = '''
-                    %s       %s       %s
-                    %s %s %s     %s %s %s     %s %s %s
-                    %s %s %s     %s %s %s     %s %s %s
-                    %s %s %s     %s %s %s     %s %s %s
-                    '''
+def index():# Modifies value in such a way so that the game works
+  global value
 
-    # ============== board section ==============
-    # prints all living boards
-    def printBoards(self):
-        livingBoardList = [key for key in ["A", "B", "C"] \
-                            if not self.isDead(self.boards[key])]
-        if len(livingBoardList) == 1:
-            key = livingBoardList[0]
-            print self.simpleForm % tuple([key+": "] +
-                                            self.boards[key][0:3] +
-                                            self.boards[key][3:6] +
-                                            self.boards[key][6:9])
-        elif len(livingBoardList) == 2:
-            key = livingBoardList
-            print self.doubleForm % tuple([key[0]+": "] + [key[1]+": "] +
-                                            self.boards[key[0]][0:3] + \
-                                            self.boards[key[1]][0:3] + \
-                                            self.boards[key[0]][3:6] + \
-                                            self.boards[key[1]][3:6] + \
-                                            self.boards[key[0]][6:9] + \
-                                            self.boards[key[1]][6:9])
-        elif len(livingBoardList) == 3:
-            key = livingBoardList
-            print self.tripleForm % tuple([key[0]+": "] + \
-                                            [key[1]+": "] + \
-                                            [key[2]+": "] + \
-                                            self.boards[key[0]][0:3] + \
-                                            self.boards[key[1]][0:3] + \
-                                            self.boards[key[2]][0:3] + \
-                                            self.boards[key[0]][3:6] + \
-                                            self.boards[key[1]][3:6] + \
-                                            self.boards[key[2]][3:6] + \
-                                            self.boards[key[0]][6:9] + \
-                                            self.boards[key[1]][6:9] + \
-                                            self.boards[key[2]][6:9])
-        #print "Fingerprints: " + str([self.getFingerprint(self.boards[key]) \
-        #                            for key in ["A", "B", "C"]]) + " = " + \
-        #                            str(self.multiplyFP(self.boards)) + "\n"
+  if Alpha==['B','C']:
+    value=66
+  elif Alpha==['C']:
+    value=67
+  elif Alpha==['B']:
+    value=66
+  
+def board():#Only displays if threeboards are alive
+  print('A      B      C')
+  print(*BoardA[:3],'',*BoardB[:3],'',*BoardC[:3])
+  print(*BoardA[3:6],'',*BoardB[3:6],'',*BoardC[3:6],)
+  print(*BoardA[6:],'',*BoardB[6:],'',*BoardC[6:])
 
-    # returns True if the input single board is dead
-    def isDead(self, board):
-        for pattern in self.dead_patterns:
-            isCrossInARow = [board[index] == 'X' for index in pattern]
-            if isCrossInARow == [True]*3:
-                return True
-        return False
+def two(X,Y):#Only displays if only twoboards are alive
+  print(X,'    ',Y)
+  print(*MBoard[0][:3],'',*MBoard[1][:3])
+  print(*MBoard[0][3:6],'',*MBoard[1][3:6])
+  print(*MBoard[0][6:],'',*MBoard[1][6:])
 
-    # returns True if all boards are dead
-    def isAllBoardDead(self, boards):
-        for board in boards.values():
-            if not self.isDead(board):
-                return False
-        return True
+def one(Y):#Only displays if only one board is alive.
+  print(Y)
+  print(*MBoard[0][:3])
+  print(*MBoard[0][3:6])
+  print(*MBoard[0][6:])
 
-    # returns a list of four rotated boards
-    def rotate(self, board):
-        rotated_boards = [board]
-        temp = list(board)
-        for i in range(3):
-            newBoard = list(board)
-            newBoard[0] = temp[6]
-            newBoard[1] = temp[3]
-            newBoard[2] = temp[0]
-            newBoard[3] = temp[7]
-            newBoard[5] = temp[1]
-            newBoard[6] = temp[8]
-            newBoard[7] = temp[5]
-            newBoard[8] = temp[2]
-            temp = list(newBoard)
-            for i in range(9):
-                if temp[i] != 'X':
-                    temp[i] = i
-            rotated_boards.append(temp)
-        return rotated_boards
+def player():# Takes input from the player. Checks if its valid.
+  global count #Player 1 makes move only when count is 0
+  global value
+  global FixC
+  global move
+  global location
+  global position
 
-    # returns a list of four refleted boards
-    def reflect(self, board):
-        reflectedBoards = []
-        newBoard = list(board)
-        newBoard[0] = board[6]
-        newBoard[1] = board[7]
-        newBoard[2] = board[8]
-        newBoard[6] = board[0]
-        newBoard[7] = board[1]
-        newBoard[8] = board[2]
-        for i in range(9):
-            if newBoard[i] != 'X':
-                newBoard[i] = i
-        reflectedBoards.append(newBoard)
-        newBoard = list(board)
-        newBoard[0] = board[2]
-        newBoard[2] = board[0]
-        newBoard[3] = board[5]
-        newBoard[5] = board[3]
-        newBoard[6] = board[8]
-        newBoard[8] = board[6]
-        for i in range(9):
-            if newBoard[i] != 'X':
-                newBoard[i] = i
-        reflectedBoards.append(newBoard)
-        newBoard = list(board)
-        newBoard[1] = board[3]
-        newBoard[3] = board[1]
-        newBoard[5] = board[7]
-        newBoard[7] = board[5]
-        newBoard[2] = board[6]
-        newBoard[6] = board[2]
-        for i in range(9):
-            if newBoard[i] != 'X':
-                newBoard[i] = i
-        reflectedBoards.append(newBoard)
-        newBoard = list(board)
-        newBoard[0] = board[8]
-        newBoard[8] = board[0]
-        newBoard[1] = board[5]
-        newBoard[5] = board[1]
-        newBoard[3] = board[7]
-        newBoard[7] = board[3]
-        for i in range(9):
-            if newBoard[i] != 'X':
-                newBoard[i] = i
-        reflectedBoards.append(newBoard)
-        return reflectedBoards
+  while True:
+    if count==0:
+      move=player1()
+      print('Player 1:',move)
+      move_given_by='Player 1'
+      winner='Player 2'
+    else:
+      move=input('Player 2: ')#[A,B,C]
+      move_given_by='Player 2'#[0,1,2]
+      winner='Player 1'       #[B,C]
 
-    # returns a list of unique transformed boards by rotation or reflection
-    def transform(self, board):
-        totalBoards = self.rotate(board)
-        for pattern in self.reflect(board):
-            if pattern not in totalBoards:
-                totalBoards.append(pattern)
-        return totalBoards
-
-    def isSpace(self, boards, moveInput):
-        if moveInput[0] in boards.keys() and int(moveInput[1]) in range(9):
-            return boards[moveInput[0]][int(moveInput[1])] != 'X'
-        return False
-
-    # =========== fingerprint section ===========
-    # returns the fingerprint of input single board
-    def getFingerprint(self, board):
-        if self.isDead(board):
-            return {'1':1}
-        pattern_1 = [['X', 1, 2, 3, 4, 5, 6, 7, 8],
-                     [0, 'X', 2, 3, 4, 5, 6, 7, 8],
-                     ['X', 'X', 'X', 3, 4, 5, 6, 7, 8],
-                     ['X', 1, 2, 3, 'X', 5, 6, 7, 'X'],
-                     ['X', 1, 2, 3, 4, 'X', 6, 'X', 8],
-                     [0, 'X', 2, 3, 'X', 5, 6, 'X', 8],
-                     ['X', 'X', 'X', 'X', 4, 5, 6, 7, 8],
-                     ['X', 'X', 'X', 3, 'X', 5, 6, 7, 8],
-                     ['X', 'X', 'X', 3, 4, 5, 'X', 7, 8],
-                     ['X', 'X', 'X', 3, 4, 5, 6, 'X', 8],
-                     ['X', 'X', 2, 3, 'X', 5, 6, 'X', 8],
-                     ['X', 'X', 2, 3, 'X', 5, 6, 7, 'X'],
-                     ['X', 1, 'X', 3, 'X', 5, 'X', 7, 8]]
-        pattern_a = [['X', 1, 2, 3, 4, 5, 6, 7, 'X'],
-                     [0, 'X', 2, 'X', 4, 5, 6, 7 , 8],
-                     [0, 'X', 2, 3, 4, 5, 6, 'X' , 8],
-                     ['X', 'X', 2, 3, 4, 5, 'X', 7, 8],
-                     ['X', 1, 'X', 3, 'X', 5, 6, 7, 8],
-                     ['X', 1, 'X', 3, 4, 5, 6, 'X', 8],
-                     ['X', 1, 2, 3, 'X', 'X', 6, 7, 8],
-                     ['X', 'X', 2, 'X', 'X', 5, 6, 7, 8],
-                     ['X', 'X', 2, 'X', 4, 'X', 6, 7, 8],
-                     ['X', 'X', 2, 'X', 4, 5, 6, 7, 'X'],
-                     ['X', 'X', 2, 3, 4, 5, 6, 'X', 'X'],
-                     ['X', 1, 'X', 3, 4, 5, 'X', 7, 'X'],
-                     [0, 'X', 2, 'X', 4, 'X', 6, 'X', 8],
-                     ['X', 'X', 2, 3, 'X', 'X', 'X', 7, 8],
-                     ['X', 'X', 2, 3, 4, 'X', 'X', 'X', 8],
-                     ['X', 'X', 2, 3, 4, 'X', 'X', 7, 'X'],
-                     ['X', 'X', 2, 'X', 4, 'X', 6, 'X', 'X']]
-        pattern_b = [['X', 1, 'X', 3, 4, 5, 6, 7, 8],
-                     ['X', 1, 2, 3, 'X', 5, 6, 7, 8],
-                     ['X', 1, 2, 3, 4, 'X', 6, 7, 8],
-                     [0, 'X', 2, 3, 'X', 5, 6, 7, 8],
-                     ['X', 'X', 2, 'X', 4, 5, 6, 7, 8],
-                     [0, 'X', 2, 'X', 4, 'X', 6, 7, 8],
-                     ['X', 'X', 2, 3, 'X', 'X', 6, 7, 8],
-                     ['X', 'X', 2, 3, 'X', 5, 'X', 7, 8],
-                     ['X', 'X', 2, 3, 4, 'X', 'X', 7, 8],
-                     ['X', 'X', 2, 3, 4, 5, 'X', 'X', 8],
-                     ['X', 'X', 2, 3, 4, 5, 'X', 7, 'X'],
-                     ['X', 1, 'X', 3, 'X', 5, 6, 'X', 8],
-                     ['X', 1, 2, 3, 'X', 'X', 6, 'X', 8],
-                     ['X', 'X', 2, 'X', 4, 'X', 6, 'X', 8],
-                     ['X', 'X', 2, 'X', 4, 'X', 6, 7, 'X']]
-        pattern_c = [[0, 1, 2, 3, 4, 5, 6, 7, 8]]
-        pattern_d = [['X', 'X', 2, 3, 4, 'X', 6, 7, 8],
-                     ['X', 'X', 2, 3, 4, 5, 6, 'X', 8],
-                     ['X', 'X', 2, 3, 4, 5, 6, 7, 'X']]
-        pattern_ab = [['X', 'X', 2, 3, 'X', 5, 6, 7, 8],
-                      ['X', 1, 'X', 3, 4, 5, 'X', 7, 8],
-                      [0, 'X', 2, 'X', 'X', 5, 6, 7, 8],
-                      ['X', 'X', 2, 3, 4, 'X', 6, 'X', 8],
-                      ['X', 'X', 2, 3, 4, 'X', 6, 7, 'X']]
-        pattern_ad = [['X', 'X', 2, 3, 4, 5, 6, 7, 8]]
-        pattern_c2 = [[0, 1, 2, 3, 'X', 5, 6, 7, 8]]
-        living_patterns = pattern_1 + pattern_a + pattern_b + pattern_c + \
-                       pattern_d + pattern_ab + pattern_ad + pattern_c2
-        transformedBoard = [i for i in self.transform(board) \
-                                if i in living_patterns][0]
-        if transformedBoard in pattern_1:
-            return {'1':1}
-        elif transformedBoard in pattern_a:
-            return {'a':1}
-        elif transformedBoard in pattern_b:
-            return {'b':1}
-        elif transformedBoard in pattern_c:
-            return {'c':1}
-        elif transformedBoard in pattern_d:
-            return {'d':1}
-        elif transformedBoard in pattern_ab:
-            return {'a':1, 'b':1}
-        elif transformedBoard in pattern_ad:
-            return {'a':1, 'd':1}
-        elif transformedBoard in pattern_c2:
-            return  {'c':2}
+    if len(move)!=2:
+      print('Invalid move, please input again')
+    else:
+      location,position=move 
+      if Alpha==['A','C'] and location=='C':
+        FixC=1
+      if Alpha==['A','C'] and location=='A':
+        FixC=0
+      if count==0:
+        break
+      else:
+        if (position in Numbers) and (location in Alpha) and (MBoard[ord(location)-value-FixC][int(position)])!='X':
+          break
         else:
-            return False
+          print('Invalid move, please input again')
+  MBoard[ord(location)-value-FixC][int(position)]='X'
 
-    # returns the multiplied fingerprint of input boards
-    def multiplyFP(self, boards):
-        fingerprints = [self.getFingerprint(boards[key]) \
-                            for key in ["A", "B", "C"]]
-        totalFP = {}
-        for boardFP in fingerprints:
-            for cha in boardFP:
-                if cha not in totalFP.keys():
-                    totalFP[cha] = boardFP[cha]
-                else:
-                    totalFP[cha] += boardFP[cha]
-        if '1' in totalFP.keys():
-            if totalFP.keys() != ['1']:
-                del totalFP['1']
-            else:
-                totalFP = {'1':1}
-        return totalFP
+  if move_given_by=='Player 1':
+    count=1
+  else:
+    count=0
+  checkboard(ord(location)-value-FixC,location,winner)
 
-    # ================ AI section ================
-    # Evaluation function of state
-    def evalFunc(self, boards):
-        winning_fingerprints = [{"a":1}, {"b":2}, {"c":2}, {"b":1, "c":1}]
-        fingerPrint = self.multiplyFP(boards)
-        if fingerPrint in winning_fingerprints:
-            return 10
-        return 0
+def checkboard(z,L,p):# Determines which board is dead
+   global dead
+   global value
 
-    # returns successor boards given current boards and action
-    def getSuccBoards(self, boards, action):
-        succBoards = {}
-        for key in ["A", "B", "C"]:
-            succBoards[key] = list(boards[key])
-        succBoards[action[0]][int(action[1])] = 'X'
-        return succBoards
+   if MBoard[z][:3].count('X')==3 or MBoard[z][3:6].count('X')==3 or MBoard[z][6:].count('X')==3:
+     dead+=1
+     del MBoard[z]
+     Alpha.remove(L)
 
-    # returns a list of legal actions given boards
-    def getLegalActions(self, boards):
-        livingBoardList = [key for key in ["A", "B", "C"] \
-                            if not self.isDead(self.boards[key])]
-        legalActions = []
-        for key in livingBoardList:
-            legalActions += [key+str(i) for i in boards[key] if i != "X"]
-        return legalActions
+   elif MBoard[z][:7:3].count('X')==3 or MBoard[z][1:8:3].count('X')==3 or MBoard[z][2:9:3].count('X')==3:
+     dead+=1
+     del MBoard[z]
+     Alpha.remove(L)
 
-    # maxValue function in Minimax Search
-    def getAIMove(self, boards):
-        legalActions = self.getLegalActions(boards)
-        maxValue = -float("inf")
-        maxAct = None
-        for act in legalActions:
-            succ  = self.getSuccBoards(boards, act)
-            evalSucc = self.evalFunc(succ)
-            if evalSucc > maxValue:
-                maxValue = evalSucc
-        maxActs = [act for act in legalActions \
-                if self.evalFunc(self.getSuccBoards(boards, act)) == maxValue]
-        # Randomness for more interesting moves
-        return random.choice(maxActs)
+   elif MBoard[z][:9:4].count('X')==3 or MBoard[z][2:7:2].count('X')==3:
+     dead+=1
+     del MBoard[z]
+     Alpha.remove(L)
 
-    # returns player's input
-    def getPlayerMove(self, boards):
-        move = raw_input("Your move: ").upper()
-        while len(move) != 2 or move[0] not in boards.keys() or\
-                not self.isSpace(boards, move) or self.isDead(boards[move[0]]):
-            move = raw_input("Invalid move! Enter your move again: ").upper()
-        return move
+   if dead!=3:
+     display()
+   if dead==3:
+     print(p,'wins game')
 
-    # execute the move on boards
-    def makeMove(self, boards, move):
-        boards[move[0]][int(move[1])] = 'X'
+def display():# Displays only if there is atleast one remaining board
+  global dead
+  if dead==0:
+    BoardA, BoardB, BoardC=MBoard
+    board()
+  elif dead==1:
+    two(Alpha[0],Alpha[1])
+  elif dead==2:
+    one(Alpha[0])
 
-    # ============ game flow section ============
-    # introduction of the game
-    def intro(self):
-        print '''
-                \n\tThis game contains three 3x3 classic Tic-Tac-Toe boards.
-                \n\tBoth player and AI play 'X'.
-                \n\tThe player who plays the last move loses the game.
-                \n\tAI will always make the first move.
-                \n\tYou can play the game as follows: e.g., if you enter 'A1',
-                \n\tthat means you want to put a cross in position 1 of board A.
-                \n\tPress Ctrl + C to quit the game
-              '''
 
-    # start the game
-    def startGame(self):
-        print '''
-                \n\t-------------------------------------
-                \n\tWelcome to 3-board misere Tic-Tac-Toe
-                \n\t-------------------------------------
-              '''
-        self.intro()
-        self.enterLoop()
+def player1():# Move given by my AI
+  global firstmove
+  global value
+  global location
+  global FixC
+  global dead
+  global trip
+  global mylocation
 
-    # enter the loop
-    def enterLoop(self):
-        playFlag = True
-        turn = "AI"
-        while playFlag:
-            # Get move
-            if turn == "AI":
-                move = self.getAIMove(self.boards)
-                print "AI: " + move
-            elif turn == "Player":
-                move = self.getPlayerMove(self.boards)
-            self.makeMove(self.boards, move)
-            # print all living boards
-            self.printBoards()
-            if self.isAllBoardDead(self.boards):
-                break
-            # Turn switching
-            if turn == "AI":
-                turn = "Player"
-            else:
-                turn = "AI"
-        # Winning/losing message
-        if turn == "AI":
-            print '''
-                    \n\t-------------------------------------
-                    \n\tCongratulations! You won against AI!
-                    \n\t-------------------------------------
-                  '''
-        else:
-            print '''
-                    \n\t----------------------------
-                    \n\tGame over! You are defeated!
-                    \n\t----------------------------
-                  '''
-        self.endGame()
+  if firstmove==0:# First move given by AI
+    tactic='A4'
+    firstmove+=1
+    return tactic
+  else:
+    if location=='B' and trip==True: #That is if player2 plays first move on B happens when NO X on board
+      tactic='C4'
+      trip= False
+      mylocation='C'
+      return tactic
 
-    # end the game
-    def endGame(self):
-        playAgain = raw_input("Play again?(y/n): ").lower()
-        if playAgain == "y":
-            self.__init__()
-            self.startGame()
-        else:
-            print '''
-                    \n\t-----------------------------------------
-                    \n\tThank you for playing! See you next time!
-                    \n\t-----------------------------------------
-                  '''
-            sys.exit()
+    elif location=='C'and trip==True: #That is if player2 plays first move on C happens when NO X on board
+      tactic='B4'
+      trip= False
+      mylocation="B"
+      return tactic
 
-if __name__ == "__main__":
-    TicTacToe = Game()
-    TicTacToe.startGame()
+    if len(MBoard)==2 and MBoard[0][4]=='X' and MBoard[1][4]=='X':
+      tactic=location+str(simplesacrifice1(ord(location)-value-FixC))
+      return tactic
+    
+    elif dead==2 and MBoard[0][4]=='X':# That is if player2 plays first move on A
+      tactic=location+str(boottrap(ord(location)-value-FixC))
+      return tactic
+    
+    elif len(MBoard)==2 and MBoard[ord(location)-value-FixC][4]=='X' and MBoard[0][4]!=MBoard[1][4]:
+      tactic=location+str(boottrap(ord(location)-value-FixC))
+      return tactic
+
+    elif dead==1 and MBoard[ord(location)-value-FixC][4]=='X' and (MBoard[0][4]!='X'or MBoard[1][4]!='X') and MBoard.count('X')>1:
+      tactic=location+str(boottrap(ord(location)-value-FixC))
+      return tactic
+
+
+    elif dead==2 and mylocation in Alpha and MBoard[0][4]=='X' and MBoard[1][4]=='X':
+
+      tactic=location+str(simplesacrifice1(ord(location)-value-FixC))
+      return tactic
+
+    elif location==mylocation and mylocation in Alpha and dead==1: # IF opponent plays in my board where I have a X at center, 2 board remaining
+      tactic=location+str(boottrap(ord(location)-value-FixC))
+      return tactic
+
+    elif mylocation not in Alpha and dead==2: # If opponent killed my boottrap , 1 board remaining
+      tactic=Alpha[0]+str(attacked(0))
+      return tactic
+
+    elif dead!=2 and MBoard[ord(location)-value-FixC].count('X')>1:# 3rd move by AI and an only happens if there is already an X on the board
+
+      tactic=location+str(simplesacrifice1(ord(location)-value-FixC))
+      if str(simplesacrifice1(ord(location)-value-FixC)) in Numbers: # if its possible to kill the board simply, otherwise it returns NONE
+        return tactic
+
+      else:
+        tactic= location+str(complex2X(ord(location)-value-FixC)) # if the board can only be killed by setting up 2X
+        return tactic
+    
+
+
+def simplesacrifice1(z):# if they played in the board with an x already. 
+  score=0
+  for i in range(9):
+    if MBoard[z][i]!='X':
+      MBoard[z][i]='X'
+      if MBoard[z][:3].count('X')==3 or MBoard[z][3:6].count('X')==3 or MBoard[z][6:].count('X')==3:
+        break
+      elif MBoard[z][:7:3].count('X')==3 or MBoard[z][1:8:3].count('X')==3 or MBoard[z][2:9:3].count('X')==3:
+        break
+      elif MBoard[z][:9:4].count('X')==3 or MBoard[z][2:7:2].count('X')==3:
+        break
+      else:
+        MBoard[z][i]=i
+        score+=1
+  if score!=7:
+    return i
+  else:
+    return complex2X(z)
+
+def complex2X(z):# cant be killed simply so have to apply the 2X method
+  global position
+  combination=[[0,5,7],[1,5,6],[2,3,7],[3,1,8],[99],[5,1,6],[6,1,5],[7,0,5],[8,1,3]]
+  for index in combination:
+    if int(position) in index:
+      record=[]
+      for i in index:
+        record.append(str(MBoard[z][i]))
+      if record.count('X')==2:
+
+        for i in record:
+          if i in Numbers:
+            MBoard[z][int(i)]='X'
+            return i
+            break
+
+def boottrap(z): # Traps in the last board
+  global position
+  combination=[[5,7],[6,8],[7,3],[2,8],[9999],[0,6],[1,5],[0,2],[1,3]]
+  for index in combination:
+    if combination.index(index)==int(position) and combination.index(index)!=4:
+      for i in index:
+        if MBoard[z][i]!='X':
+          MBoard[z][i]='X'
+          status= boardstatus(ord(location)-value-FixC)
+          if status=='alive':
+            return i
+            break
+          else:
+            MBoard[z][i]=i
+
+def attacked(z):
+  combination=[[0,8],[2,6],[3,5],[1,7]] # IF NO 2X trap in the last board
+  combo2=[1,3,5,7] # IF THERE IS 2X TRAP IN LAST BOARD
+  
+  for index in combination:
+    if MBoard[z][index[0]]=='X' and MBoard[z][index[1]]!='X':
+
+      MBoard[z][index[1]]=='X'
+      return index[1]
+      break
+    elif MBoard[z][index[1]]=='X' and MBoard[z][index[0]]!='X':
+      MBoard[z][index[0]]=='X'
+      return index[0]
+      break
+       
+  if MBoard[z].count('X')==5:
+    for i in combo2:
+      if MBoard[z][i]!='X':
+        MBoard[z][i]=='X'
+        return i
+
+def boardstatus(z):
+  status='alive' # this means board won't be dead if next move made in it
+  if MBoard[z][:3].count('X')==3 or MBoard[z][3:6].count('X')==3 or MBoard[z][6:].count('X')==3:
+    status='dead'
+  elif MBoard[z][:7:3].count('X')==3 or MBoard[z][1:8:3].count('X')==3 or MBoard[z][2:9:3].count('X')==3:
+    status='dead'
+  elif MBoard[z][:9:4].count('X')==3 or MBoard[z][2:7:2].count('X')==3:
+    status='dead'
+  return status
+
+game()
